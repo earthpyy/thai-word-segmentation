@@ -1,6 +1,6 @@
 import json
 
-file_name = 'panther_test.txt'
+file_name = 'test.txt'
 input_file = open(file_name).read().translate({ord(c): ' ' for c in '!@#$%^&*()[]{};:,./<>?\|`~-=_+"'})
 word_list = json.load(open('thai-wordlist.json'))
 
@@ -76,4 +76,22 @@ while i < len(input_file) - 1:
         current = ''
         last_match = ''
 
-print(words)
+for index, dic in enumerate(words):
+    i = len(dic['word']) - 1
+    if index < len(words) - 1:
+        ii = len(words[index + 1]['word']) - 1
+    while i >= 0 and ii >= 0:
+        word_l = word_r = ''
+        for j in range(i, len(dic['word'])):
+            word_l = word_l + dic['word'][j]
+        # print(word_l, end=' ')
+
+        if index < len(words) - 1:
+            for j in range(0, len(words[index + 1]['word']) - ii):
+                word_r = word_r + words[index + 1]['word'][j]
+            # print(word_r)
+
+        i -= 1
+        ii -= 1
+
+# print(words)
