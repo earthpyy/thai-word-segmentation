@@ -27,14 +27,14 @@ while i < len(input_file) - 1:
     c = input_file[i]
     if c == ' ' and (len(words) == 0 or pos + len(last_match) > words[-1]['pos'] + len(words[-1]['word'])):
         if current in word_list:
-            words.append({'pos': pos, 'word': last_match})
+            words.append({'pos': pos, 'word': last_match, 'adj': []})
             i = words[-1]['pos']
             last_pos = pos
         current = ''
         last_match = ''
         continue
     elif c == len(input_file) - 1 and (len(words) == 0 or pos + len(last_match) > words[-1]['pos'] + len(words[-1]['word'])):
-        words.append({'pos': pos, 'word': last_match})
+        words.append({'pos': pos, 'word': last_match, 'adj': []})
         last_pos = pos
         break
     elif ord(c) < 3585 or ord(c) > 3662:
@@ -56,7 +56,7 @@ while i < len(input_file) - 1:
         last_match = current
         if left == 1:
             if len(words) == 0 or pos + len(last_match) > words[-1]['pos'] + len(words[-1]['word']):
-                words.append({'pos': pos, 'word': last_match})
+                words.append({'pos': pos, 'word': last_match, 'adj': []})
                 i = words[-1]['pos']
                 current = ''
                 last_match = ''
@@ -66,7 +66,7 @@ while i < len(input_file) - 1:
     if left == 0:
         if last_match != '':
             if len(words) == 0 or pos + len(last_match) > words[-1]['pos'] + len(words[-1]['word']):
-                words.append({'pos': pos, 'word': last_match})
+                words.append({'pos': pos, 'word': last_match, 'adj': []})
                 last_pos = pos
                 i = words[-1]['pos']
             else:
@@ -77,21 +77,83 @@ while i < len(input_file) - 1:
         last_match = ''
 
 for index, dic in enumerate(words):
-    i = len(dic['word']) - 1
-    if index < len(words) - 1:
-        ii = len(words[index + 1]['word']) - 1
-    while i >= 0 and ii >= 0:
-        word_l = word_r = ''
-        for j in range(i, len(dic['word'])):
-            word_l = word_l + dic['word'][j]
-        # print(word_l, end=' ')
+    max_k = len(words) - index
+    if max_k > 3:
+        max_k = 3
+    elif max_k == 0:
+        break
 
-        if index < len(words) - 1:
-            for j in range(0, len(words[index + 1]['word']) - ii):
-                word_r = word_r + words[index + 1]['word'][j]
+    dic_len = len(dic['word'])
+
+    # for k in range(1, max_k):
+    #     i = len(dic['word']) - 1
+    #     n = 1
+    #     same = 0
+
+    #     while i >= 0:
+    #         if n > next_len:
+    #             break
+            
+    #         word_l = word_r = ''
+    #         for j in range(i, len(dic['word'])):
+    #             word_l = word_l + dic['word'][j]
+    #         # print(word_l, end=' ')
+
+    #         for j in range(0, n):
+    #             word_r = word_r + words[index + k]['word'][j]
+    #         # print(word_r)
+
+    #         if n == 1 and k == 1 and word_l != word_r:
+    #             words[index]['adj'].append({'index': index + k, 'val': 1})
+
+    #         if word_l == word_r:
+    #             same += 1
+
+    #         print(word_l, word_r)
+
+    #         if same > 0 and (word_l == dic['word'] or word_r == words[index + k]['word'] or word_l != word_r):
+    #             print(word_l, word_r, dic['word'], words[index + k]['word'], dic['word'][:-same], words[index + k]['word'][same:])
+    #             if check(dic['word'][:-same]) and check(words[index + k]['word'][same:]):
+    #                 print('yes')
+
+    #         n += 1
+    #         i -= 1
+
+    for k in range(1, max_k):
+        i = 0
+        same = 0
+        next_len = len(words[index + k]['word'])
+
+        if dic_len > next_len:
+            # print('hu', end=' ')
+            dic_start = dic_len - next_len
+            next_start = next_len - 1
+        else:
+            # print('ha', end=' ')
+            dic_start = 0
+            next_start = dic_len - 1
+
+        # print(dic['word'], words[index + k]['word'], dic_start, next_start)
+
+        while i < dic_len and i < next_len:
+            word_l = word_r = ''
+            for j in range(dic_start + i, dic_len):
+                word_l = word_l + dic['word'][j]
+            # print(word_l, end=' ')
+
+            for j in range(0, next_start - i + 1):
+                word_r = word_r + words[index + k]['word'][j]
             # print(word_r)
 
-        i -= 1
-        ii -= 1
+            # if n == 1 and k == 1 and word_l != word_r:
+            #     words[index]['adj'].append({'index': index + k, 'val': 1})
 
-# print(words)
+            # print(dic['word'], words[index + k]['word'], word_l, word_r)
+            if word_l == word_r:
+                # print(word_l, word_r, dic['word'], words[index + k]['word'], dic['word'][:-same], words[index + k]['word'][same:])
+                if check(dic['word'][:-len(word_l)]) and check(words[index + k]['word'][len(word_l):]):
+                    print('yes')
+
+            i += 1
+
+print(words)
