@@ -1,6 +1,6 @@
 import json
 
-file_name = 'test.txt'
+file_name = 'panther.txt'
 input_file = open(file_name).read().translate({ord(c): ' ' for c in '!@#$%^&*()[]{};:,./<>?\|`~-=_+"'})
 word_list = json.load(open('thai-wordlist.json'))
 
@@ -170,7 +170,7 @@ for index, dic in enumerate(words):
                         # print(word_l, dic_new, next_new)
 
                         if check(dic_new) and check(next_new):
-                            words[index]['adj'].append({'index': words[index + k], 'val': 100, 'same': word_l})
+                            words[index]['adj'].append({'index': words[index + k], 'val': 100, 'same': word_l, 'data': [dic_new, next_new]})
                             found = True
                             break
 
@@ -251,17 +251,36 @@ for i in range(0, len(words)):
         same = overlap(words[i]['word'], words[j]['word'])
         words[j]['word'] = words[j]['word'][same:]
 
-keywords = []
+result = []
 for node in nodes:
     if not node['node']['delete']:
-        keywords.append(node['node']['word'])
-        if node['adj'] >= 0 and node['node']['adj'][node['adj']]['val'] == 10:
-            keywords.append(node['node']['word'][:-len(node['node']['adj'][node['adj']]['same'])])
-            keywords.append(node['node']['adj'][node['adj']]['index']['word'][len(node['node']['adj'][node['adj']]['same']):])
-        # elif node['node']['adj'][node['adj']]['val'] == 100:
+        result.append(node['node']['word'])
+        if node['adj'] >= 0:
+            if node['node']['adj'][node['adj']]['val'] == 10:
+                result.append(node['node']['word'][:-len(node['node']['adj'][node['adj']]['same'])])
+                result.append(node['node']['adj'][node['adj']]['index']['word'][len(node['node']['adj'][node['adj']]['same']):])
+            elif node['node']['adj'][node['adj']]['val'] == 100:
+                result.append(node['node']['adj'][node['adj']]['data'][0])
+                result.append(node['node']['adj'][node['adj']]['data'][1])
             
+keywords = set(result)
+freq = {}
 
-# for word in words:
-#     print(word)
+# check for useless/duplicated keyword and count for frequency
+for keyword in keywords:
+    for word in result:
+        if (keyword == word and len(keyword) != 1 and not keyword.isdigit()):
+            freq.setdefault(keyword, 0)
+            freq[keyword] += 1
 
-print(keywords)
+# sort keyword from frequency
+sorted_keyword = sorted(freq, key=freq.get, reverse=True)
+
+# print keywords order by frequency of keyword
+last_freq = -1
+for keyword in sorted_keyword:
+    if last_freq != freq[keyword]:
+        last_freq = freq[keyword]
+        print()
+        print('ปรากฏ', freq[keyword], 'ครั้ง:', end=' ')
+    print(keyword, end=', ')
