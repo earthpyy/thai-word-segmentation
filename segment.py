@@ -156,7 +156,7 @@ for index, dic in enumerate(words):
             if word_l == word_r:
                 # print(word_l, dic['word'], words[index + k]['word'], dic_cut, next_cut)
                 if check(dic_cut) and check(next_cut):
-                    words[index]['adj'].append({'index': index + k, 'val': 10, 'same': len(word_l)})
+                    words[index]['adj'].append({'index': index + k, 'val': 10, 'same': word_l})
                 else:
                     found = False
                     for j in range(0, len(word_l) + 1):
@@ -170,11 +170,12 @@ for index, dic in enumerate(words):
                         # print(word_l, dic_new, next_new)
 
                         if check(dic_new) and check(next_new):
-                            words[index]['adj'].append({'index': index + k, 'val': 100, 'same': len(word_l)})
+                            words[index]['adj'].append({'index': index + k, 'val': 100, 'same': word_l})
                             found = True
                             break
-                    if not found:
-                        words[index]['adj'].append({'index': index + k, 'val': 1000, 'same': len(word_l)})
+
+                    if not found and (words[index]['pos'] + len(words[index]['word']) - len(word_l)) == words[index + k]['pos']:
+                        words[index]['adj'].append({'index': index + k, 'val': 1000, 'same': word_l})
 
             i += 1
     
@@ -185,71 +186,151 @@ for index, dic in enumerate(words):
         words[index]['adj'] = []
         words.insert(index + 1, {'valid': False, 'pos': dic['pos'] + dic_len, 'word': unknown, 'adj': []})
 
+# # step 3
+# nodes = []
+# for i, word in enumerate(words):
+#     if word['valid']:
+#         nodes.append({'index': i, 'adj': 0})
+#         break
+
+# i = nodes[-1]['index']
+# while words[i] != words[-1]:
+#     if not words[i]['adj']:
+#         i += 1
+#         while not words[i]['valid']:
+#             i += 1
+#         nodes.append({'index': i, 'adj': 0})
+#     else:
+#         min_adj = 1001
+#         min_adj_i = -1
+#         for adj in words[i]['adj']:
+#             if adj['val'] < min_adj:
+#                 min_adj = adj['val']
+#                 min_adj_i = adj['index']
+#         nodes.append({'index': min_adj_i, 'adj': min_adj})
+#         i = min_adj_i
+
+# # for nod in nodes:
+# #     print(nod)
+
+# # step 4.1.1
+# for i, node in enumerate(nodes):
+#     if node['adj'] == 1000:
+#         same = 0
+#         for adj in words[node['index'] - 1]['adj']:
+#             if adj['index'] == node['index']:
+#                 same = adj['same']
+#                 break
+#         word_l = words[node['index'] - 1]['word'][:-same]
+#         word_r = words[node['index']]['word'][same:]
+        
+#         words.insert(node['index'] - 1, {'valid': False, 'pos': words[node['index'] - 1]['pos'], 'word': word_l, 'adj': []})
+#         words.insert(node['index'], {'valid': False, 'pos': words[node['index']]['pos'], 'word': word_r, 'adj': []})
+#         # TODO: can be improved
+#         for i in range(node['index'] + 1, len(words)):
+#             for adj in words[i]['adj']:
+#                 adj['index'] += 1
+
+# # step 4.1.3
+# for index, word in enumerate(words):
+#     if not word['valid']:
+#         # TODO: check for correction
+#         words[index - 1]['delete'] = True
+#         words[index]['word'] = words[index - 1]['word'] + word['word']
+#         words[index]['pos'] = words[index - 1]['pos']
+
+# # step 4.1.4
+# # for i in range(0, len(words)):
+# #     if not words[i]['valid']:
+# #         j = i + 1
+# #         while j < len(words) - 1 and words[j]['valid']:
+# #             j += 1
+        
+# #         same = overlap(words[i]['word'], words[j]['word'])
+# #         words[j]['word'] = words[j]['word'][same:]
+
+# for node in nodes:
+#     print(words[node['index']]['word'])
+
+# for i, word in enumerate(words):
+#     print(i, word['word'], word['pos'], word['valid'])
+
 # step 3
 nodes = []
+first_i = 0
 for i, word in enumerate(words):
     if word['valid']:
-        nodes.append({'index': i, 'adj': 0})
+        nodes.append({'node': word, 'adj': -1})
+        first_i = i
         break
 
-i = nodes[-1]['index']
+i = first_i
 while words[i] != words[-1]:
     if not words[i]['adj']:
         i += 1
         while not words[i]['valid']:
             i += 1
-        nodes.append({'index': i, 'adj': 0})
+        nodes.append({'node': words[i], 'adj': -1})
     else:
         min_adj = 1001
         min_adj_i = -1
-        for adj in words[i]['adj']:
+        for j, adj in enumerate(words[i]['adj']):
             if adj['val'] < min_adj:
                 min_adj = adj['val']
                 min_adj_i = adj['index']
-        nodes.append({'index': min_adj_i, 'adj': min_adj})
+        nodes[-1]['adj'] = j
+        nodes.append({'node': words[min_adj_i], 'adj': -1})
         i = min_adj_i
 
 # for nod in nodes:
 #     print(nod)
 
 # step 4.1.1
-for i, node in enumerate(nodes):
-    if node['adj'] == 1000:
-        same = 0
-        for adj in words[node['index'] - 1]['adj']:
-            if adj['index'] == node['index']:
-                same = adj['same']
-                break
-        word_l = words[node['index'] - 1]['word'][:-same]
-        word_r = words[node['index']]['word'][same:]
-        
-        words.insert(node['index'] - 1, {'valid': False, 'pos': words[node['index'] - 1]['pos'], 'word': word_l, 'adj': []})
-        words.insert(node['index'], {'valid': False, 'pos': words[node['index']]['pos'], 'word': word_r, 'adj': []})
-        # TODO: can be improved
-        for i in range(node['index'] + 1, len(words)):
-            for adj in words[i]['adj']:
-                adj['index'] += 1
+for i, nod in enumerate(nodes):
+    node = nod['node']
+
+    if nod['adj'] >= 0 and node['adj'][nod['adj']]['val'] == 1000:
+        next_node = node['adj'][nod['adj']]['index']
+        same = len(node['adj'][nod['adj']]['same'])
+        word_l = words[next_node - 1]['word'][:-same]
+        word_r = words[next_node]['word'][same:]
+
+        # TODO: recheck
+        words[next_node - 1]['delete'] = True
+        words[next_node]['delete'] = True
+
+        words.insert(next_node - 1, {'valid': False, 'pos': words[next_node - 1]['pos'], 'word': word_l, 'adj': []})
+        words.insert(next_node, {'valid': False, 'pos': words[next_node]['pos'], 'word': word_r, 'adj': []})
 
 # step 4.1.3
 for index, word in enumerate(words):
     if not word['valid']:
         # TODO: check for correction
-        words[index - 1]['delete'] = True
         words[index]['word'] = words[index - 1]['word'] + word['word']
         words[index]['pos'] = words[index - 1]['pos']
+        words[index - 1]['delete'] = True
 
 # step 4.1.4
-# for i in range(0, len(words)):
-#     if not words[i]['valid']:
-#         j = i + 1
-#         while j < len(words) - 1 and words[j]['valid']:
-#             j += 1
+for i in range(0, len(words)):
+    if not words[i]['valid']:
+        j = i + 1
+        while j < len(words) - 1 and words[j]['valid']:
+            j += 1
         
-#         same = overlap(words[i]['word'], words[j]['word'])
-#         words[j]['word'] = words[j]['word'][same:]
+        same = overlap(words[i]['word'], words[j]['word'])
+        words[j]['word'] = words[j]['word'][same:]
 
+keywords = []
 for node in nodes:
-    print(words[node['index']]['word'])
+    if not node['node']['delete']:
+        keywords.append(node['node']['word'])
+        if node['adj'] >= 0 and node['node']['adj'][node['adj']]['val'] == 10:
+            keywords.append(node['node']['word'][:-len(node['node']['adj'][node['adj']]['same'])])
+            keywords.append(words[node['node']['adj'][node['adj']]['index']]['word'])
+        # elif node['node']['adj'][node['adj']]['val'] == 100:
+            
 
-for i, word in enumerate(words):
-    print(i, word['word'], word['pos'], word['valid'])
+# for word in words:
+#     print(word)
+
+print(keywords)
